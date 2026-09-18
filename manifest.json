@@ -2,7 +2,7 @@
   "manifestVersion": 1,
   "meta": {
     "name": "Dogecoin Core Regtest",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "shortDescription": "Private regtest chain with wallet + auto-miner for dApp development",
     "longDescription": "Runs a wallet-enabled Dogecoin Core 1.14.9 node on a private regtest chain — instant blocks, unlimited mined dev coins, no internet or sync required. Ideal for dApp development: fund addresses with generatetoaddress, build and sign raw transactions, watch ZMQ notifications. An optional built-in auto-miner produces a block every few seconds so the chain is always ready.\n\nIMPORTANT: After saving configuration changes, DISABLE and then ENABLE this pup to apply the new settings.",
     "upstreamVersions": {
@@ -29,9 +29,9 @@
           },
           {
             "name": "RPC_PORT",
-            "label": "RPC Port",
+            "label": "RPC Port (also the host-forwarded port; 24555 avoids clashing with a Core/Gateway pup's 22555)",
             "type": "text",
-            "default": "22555"
+            "default": "24555"
           },
           {
             "name": "RPC_ALLOWED_IPS",
@@ -118,7 +118,7 @@
       {
         "name": "rpc",
         "type": "tcp",
-        "port": 22555,
+        "port": 24555,
         "interfaces": [
           "core-rpc"
         ],
