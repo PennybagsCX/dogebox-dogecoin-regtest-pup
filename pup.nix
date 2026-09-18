@@ -79,7 +79,7 @@ let
     if [ -z "$ADDR" ]; then
       ADDR=$($CLI getnewaddress miner 2>/dev/null)
     fi
-    echo "[miner] mining 1 block every ${MINER_INTERVAL}s to $ADDR"
+    echo "[miner] mining 1 block every ''${MINER_INTERVAL}s to $ADDR"
 
     while true; do
       $CLI generatetoaddress 1 "$ADDR" >/dev/null 2>&1 || echo "[miner] retry: node busy or RPC error"
