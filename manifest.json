@@ -1,0 +1,189 @@
+{
+  "manifestVersion": 1,
+  "meta": {
+    "name": "Dogecoin Core Regtest",
+    "version": "0.0.1",
+    "shortDescription": "Private regtest chain with wallet + auto-miner for dApp development",
+    "longDescription": "Runs a wallet-enabled Dogecoin Core 1.14.9 node on a private regtest chain — instant blocks, unlimited mined dev coins, no internet or sync required. Ideal for dApp development: fund addresses with generatetoaddress, build and sign raw transactions, watch ZMQ notifications. An optional built-in auto-miner produces a block every few seconds so the chain is always ready.\n\nIMPORTANT: After saving configuration changes, DISABLE and then ENABLE this pup to apply the new settings.",
+    "upstreamVersions": {
+      "Core": "v1.14.9"
+    }
+  },
+  "config": {
+    "sections": [
+      {
+        "name": "RPC",
+        "description": "RPC server configuration. The node is reachable from other pups via the core-rpc interface, and from your LAN via the host port dogeboxd assigns.",
+        "fields": [
+          {
+            "name": "RPC_USERNAME",
+            "label": "RPC Username",
+            "type": "text",
+            "default": "dogebox"
+          },
+          {
+            "name": "RPC_PASSWORD",
+            "label": "RPC Password",
+            "type": "password",
+            "default": "regtest-dev-password"
+          },
+          {
+            "name": "RPC_PORT",
+            "label": "RPC Port",
+            "type": "text",
+            "default": "22555"
+          },
+          {
+            "name": "RPC_ALLOWED_IPS",
+            "label": "RPC Allowed IPs (comma-separated)",
+            "type": "text",
+            "default": "0.0.0.0/0"
+          }
+        ]
+      },
+      {
+        "name": "Mining",
+        "description": "Optional auto-miner: produces one block every N seconds so dev coins are always available. Disable it if you want deterministic, test-controlled block production (then mine manually with generatetoaddress).",
+        "fields": [
+          {
+            "name": "MINER_ENABLED",
+            "label": "Auto-mine blocks",
+            "type": "toggle",
+            "default": true
+          },
+          {
+            "name": "MINER_ADDRESS",
+            "label": "Mine to address (empty = a new wallet address)",
+            "type": "text",
+            "default": ""
+          },
+          {
+            "name": "MINER_INTERVAL",
+            "label": "Seconds between blocks",
+            "type": "text",
+            "default": "5"
+          }
+        ]
+      },
+      {
+        "name": "Node Features",
+        "description": "Indexing and notifications. After saving changes, DISABLE and re-ENABLE this pup to apply.",
+        "fields": [
+          {
+            "name": "ENABLE_TXINDEX",
+            "label": "Transaction Index",
+            "type": "toggle",
+            "default": true
+          },
+          {
+            "name": "ENABLE_ZMQ",
+            "label": "ZMQ Notifications",
+            "type": "toggle",
+            "default": true
+          },
+          {
+            "name": "DBCACHE",
+            "label": "Database Cache (MB)",
+            "type": "text",
+            "default": "256"
+          }
+        ]
+      }
+    ]
+  },
+  "container": {
+    "build": {
+      "nixFile": "pup.nix",
+      "nixFileSha256": "e8a9f3f350c42df82b1ae03d1fdc52680679a594dec3238a5e81ff3afc085035"
+    },
+    "services": [
+      {
+        "name": "dogecoind",
+        "command": {
+          "exec": "/bin/run.sh",
+          "cwd": "",
+          "env": null
+        }
+      },
+      {
+        "name": "miner",
+        "command": {
+          "exec": "/bin/miner.sh",
+          "cwd": "",
+          "env": null
+        }
+      }
+    ],
+    "exposes": [
+      {
+        "name": "rpc",
+        "type": "tcp",
+        "port": 22555,
+        "interfaces": [
+          "core-rpc"
+        ],
+        "listenOnHost": true
+      },
+      {
+        "name": "zmq-hashtx",
+        "type": "tcp",
+        "port": 28333,
+        "interfaces": [
+          "core-zmq"
+        ],
+        "listenOnHost": false
+      },
+      {
+        "name": "zmq-rawblock",
+        "type": "tcp",
+        "port": 28334,
+        "interfaces": [
+          "core-zmq"
+        ],
+        "listenOnHost": false
+      },
+      {
+        "name": "zmq-rawtx",
+        "type": "tcp",
+        "port": 28335,
+        "interfaces": [
+          "core-zmq"
+        ],
+        "listenOnHost": false
+      }
+    ],
+    "requiresInternet": false
+  },
+  "interfaces": [
+    {
+      "name": "core-rpc",
+      "version": "0.0.1",
+      "permissionGroups": [
+        {
+          "name": "RPC",
+          "description": "Allows RPC access to the regtest node",
+          "severity": 2,
+          "routes": [
+            "/*"
+          ],
+          "port": 0
+        }
+      ]
+    },
+    {
+      "name": "core-zmq",
+      "version": "0.0.1",
+      "permissionGroups": [
+        {
+          "name": "ZMQ",
+          "description": "Allows ZMQ access to the regtest node",
+          "severity": 1,
+          "routes": null,
+          "port": 28333
+        }
+      ]
+    }
+  ],
+  "dependencies": [],
+  "metrics": []
+}
