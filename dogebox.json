@@ -1,0 +1,6 @@
+{
+  "id": "dts.pups.regtest",
+  "name": "dts — regtest",
+  "description": "Dogecoin Core regtest pup for Dogebox (wallet-enabled private dev chain with auto-miner)",
+  "pups": [{"location": "regtest"}]
+}
