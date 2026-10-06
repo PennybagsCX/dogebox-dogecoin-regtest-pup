@@ -18,11 +18,13 @@ Self-hosting public testnet3 on a Dogebox is impractical: Dogecoin Core 1.14.9 n
 
 ## Install
 
-Add this repo as a pup-store source in your Dogebox dPanel, then install the **Dogecoin Core Regtest** pup:
+Add this repo as a pup-store source in your Dogebox dPanel, then install the **Dogecoin Core Regtest** pup. The source URL must end in `.git` (dogeboxd rejects other URLs):
 
 ```
-https://github.com/PennybagsCX/dogebox-dogecoin-regtest-pup
+https://github.com/PennybagsCX/dogebox-dogecoin-regtest-pup.git
 ```
+
+Current release: `0.0.4` (tag [`v0.0.4`](https://github.com/PennybagsCX/dogebox-dogecoin-regtest-pup/releases/tag/v0.0.4)); the box lists available versions from semver tags.
 
 (The root [`dogebox.json`](dogebox.json) makes the whole repo usable as a dogeboxd pup-store source; the pup itself lives in [`regtest/`](regtest/). You can also install programmatically via the dogeboxd API — `PUT /pup` with a `pupName` / `pupVersion` body.)
 
@@ -45,22 +47,22 @@ After changing pup configuration: **disable, then enable** the pup to apply the 
 
 ## Using it
 
-The RPC is reachable from your LAN at the host port dogeboxd assigns (default 24555), and from other pups via the `core-rpc` interface.
+The RPC is reachable from other pups via the `core-rpc` interface. From your LAN, use the host port dogeboxd assigns for the pup's RPC exposure (shown as the pup's "Launch web" port in the dashboard). Note from live testing on Dogebox OS beta: the plain 1:1 host forward on `RPC_PORT` (24555) is **not** reachable from the LAN — dogeboxd must allocate one of its 10000-range proxy ports for the exposure. If no proxy port appears, disable + enable the pup after install so the exposure is (re)registered.
 
 ```bash
-# mint dev coins
-ADDR=$(curl -s -u dogebox:regtest-dev-password -d '{"method":"getnewaddress","params":["dev"]}' http://<box-ip>:24555/ | jq -r .result)
-curl -s -u dogebox:regtest-dev-password -d "{\"method\":\"generatetoaddress\",\"params\":[101,\"$ADDR\"]}" http://<box-ip>:24555/
+# mint dev coins (run on the box, or from the LAN via the proxy port described above)
+ADDR=$(curl -s -u dogebox:regtest-dev-password -d '{"method":"getnewaddress","params":["dev"]}' http://<host>:24555/ | jq -r .result)
+curl -s -u dogebox:regtest-dev-password -d "{\"method\":\"generatetoaddress\",\"params\":[101,\"$ADDR\"]}" http://<host>:24555/
 
 # check the chain
-curl -s -u dogebox:regtest-dev-password -d '{"method":"getblockchaininfo"}' http://<box-ip>:24555/
+curl -s -u dogebox:regtest-dev-password -d '{"method":"getblockchaininfo"}' http://<host>:24555/
 ```
 
 ### Ports
 
 | Port | Purpose | Exposure |
 |---|---|---|
-| 24555 | JSON-RPC | host-forwarded (LAN) + `core-rpc` interface for other pups |
+| 24555 | JSON-RPC | container port; LAN access via the dogeboxd-assigned proxy port + `core-rpc` interface for other pups |
 | 28333 | ZMQ `hashtx` | other pups via `core-zmq` interface |
 | 28334 | ZMQ `rawblock` | other pups via `core-zmq` interface |
 | 28335 | ZMQ `rawtx` | other pups via `core-zmq` interface |
@@ -71,6 +73,11 @@ curl -s -u dogebox:regtest-dev-password -d '{"method":"getblockchaininfo"}' http
 - `run.sh` launches `dogecoind -regtest=1` with no P2P listening and no DNS seeds: a fully standalone chain.
 - `miner.sh` loops `generatetoaddress` every `MINER_INTERVAL` seconds when enabled.
 - Regtest addresses use the testnet-style `m`/`n` prefix; coins are worthless by design.
+
+## Known issues (audit 2026-10-06)
+
+- **No logo.** This repo has never shipped a `logo.png`, and the manifest intentionally carries no `logoPath` (the two are consistent — nothing dangles). Adding a logo later requires a manifest `logoPath` + patch version bump + new tag.
+- **Dogebox source listing may lag.** A box whose *Pup Store source for this repo was added before v0.0.4* can keep showing `0.0.3` as the latest version even after `v0.0.4` is pushed (observed live: `git ls-remote` shows the tag, but the box's update cache reports no newer version). Re-adding the source (or refreshing the store) fixes the listing. This is box-side state, not a repo defect.
 
 ## Changelog
 
